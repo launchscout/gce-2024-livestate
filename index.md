@@ -86,16 +86,14 @@ Chris Nelson
 
 ---
 
-## Three reasons
-- We are re-writing things provided by the web platform
-- I'd like to lower barriers to using Elixir
-- LiveView is really complicated
+# Why do we really love LiveView?
+- It gives a sensible way to manage state
+- We get to build one application instead of two
 
 ---
 
-# LiveState 
-- Embraces the web platform
-- We are happy to share
+# LiveState
+### An attempt to have the things we love about LiveView without Elixir rendering our view
 
 ---
 
