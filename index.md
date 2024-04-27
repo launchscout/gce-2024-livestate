@@ -35,27 +35,67 @@ style: |
 ---
 
 ![bg right contain](./matched-edge.png)
-# Beyond LiveView
-### Getting the Javascript you need, keeping the Elixir you love
+# LiveState: LiveView Re-Imagined
 Chris Nelson
 @superchris
 ![h:200](full-color.png#title-slide-logo)
 
 ---
 
+<!-- footer: ![](full-color.png) -->
 # Who am I?
 - Long-time (old) Elixirist
 - Co-Founder of Launch Scout
-- Creator LiveElements and LiveState
+- Creator LiveState (and friends)
 
 ---
 
-# When would we want to go Beyond LiveView?
-## The two scenarios:
-- We need to extend our LiveView app with some Javascript
-  - There's a good JS solution we just wanna use
-  - Doing something client side is just the right move
-- We are building an app that isn't served by Elixir
+# Let's start with the obvious:
+
+---
+
+# Why the heck would you re-imagine LiveView?
+
+---
+
+# I come to praise LiveView, not to bury it
+### LiveView is absolutely excellent, if you are or are willing to become an Elixirist
+
+---
+
+# But what about everybody else?
+- We have a solution to the most difficult problem in web application development
+- But we're hiding it under a rock
+
+---
+
+# And what about us?
+- We can stay happily in Elixir and never touch the nasty javascript
+- But we also miss out on some really excellent innovations going on
+
+---
+
+# What makes web application development so hard?
+## This?
+![all the mvcs](web2.png)
+
+---
+
+## Or this?
+![](event_reducers.png)
+
+---
+
+## Three reasons
+- We are re-writing things provided by the web platform
+- I'd like to lower barriers to using Elixir
+- LiveView is really complicated
+
+---
+
+# LiveState 
+- Embraces the web platform
+- We are happy to share
 
 ---
 
