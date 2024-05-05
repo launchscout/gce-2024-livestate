@@ -34,6 +34,7 @@
             <th>Last name</th>
             <th>First name</th>
             <th>Birth date</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -41,6 +42,7 @@
             <td :text="person.last_name"></td>
             <td :text="person.first_name"></td>
             <td :text="person.birth_date"></td>
+            <td><button :data-id="person.id" :sendclick="edit-person">Edit</button></td>
           </tr>
         </tbody>
       </table>
