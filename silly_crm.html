@@ -27,11 +27,40 @@
     </script>
   </head>
   <body>
-    Wut up Gig City!
     <live-template url="ws://localhost:4000/live_state" topic="people:all">
-      <ul>
-        <li :each="person in people" :text="person.first_name"></li>
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>Last name</th>
+            <th>First name</th>
+            <th>Birth date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :each="person in people">
+            <td :text="person.last_name"></td>
+            <td :text="person.first_name"></td>
+            <td :text="person.birth_date"></td>
+          </tr>
+        </tbody>
+      </table>
+      <button :sendclick="add-person">Add Person</button>
+      <dialog :open="editing">
+        <form>
+          <div>
+            <label>First Name</label>
+            <input name="first_name" :value="person.first_name" />
+          </div>
+          <div>
+            <label>Last Name</label>
+            <input name="last_name" :value="person.last_name" />
+          </div>
+          <div>
+            <label>Birth Date</label>
+            <input name="birth_date" type="date" :value="person.birth_date" />
+          </div>
+        </form>
+      </dialog>
     </live-template>
   </body>
 </html>
