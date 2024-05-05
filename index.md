@@ -75,6 +75,14 @@ Chris Nelson
 
 ---
 
+# And there are things worth paying attention to...
+- Custom Elements
+- Import maps
+- Signals
+- Or even the humble `<dialog>`
+
+---
+
 # What makes web application development so hard?
 ## This?
 ![all the mvcs](web2.png)
@@ -94,183 +102,29 @@ Chris Nelson
 
 # LiveState
 ### An attempt to have the things we love about LiveView without Elixir rendering our view
+- An elixir library (live_state)
+- A javascript library (phx-live-state)
+- Both are thin abstractions over Phoenix Channels
 
 ---
 
-# Scenario the first
+# How it works
+
+- `phx-live-state` sends Custom Events over channel as `lvs:event_name`
+- Receives `state:change` events to update local state
+  - or `state:patch` containing JSON patches
+- state updates trigger re-renders
+  - **This part I get for free**
 
 ---
 
-# What are the options?
-- Hooks
-- JS Commands
-- Both are pretty low level and imperative
+# Example time: An airport map element
+- Custom element we can drop on any page
+- Displays pins for aiport data on a map
+- Fetches when the user pans/zooms
 
 ---
-
-# A better way to bridge to JS
-- Custom HTML Elements
-- LiveView already renders HTML
-- A better unit of abstraction
-  - higher level
-  - more declarative
-- Data in, actions out
-
----
-
-# Babby's first element
-```html
-<html>
-  <head>
-    <script>
-      class SayBoopElement extends HTMLElement {
-        connectedCallback() {
-          this.innerHTML = `Boop!`
-        }
-      }
-      customElements.define('say-boop', SayBoopElement);
-    </script>
-  </head>
-  <body>
-    <say-boop></say-boop>
-  </body>
-</html>
-
-```
----
-
-# Custom Element superpowers
-- Shadow DOM
-- Slots
-- Shadow parts
-- Custom events
-
----
-
-# You might want a library, but you don't need a framework
-- Vanilla spec is a bit low level
-- Lit is my current fave, but I am *not* committed
-- Custom elements are just DOM nodes, mix n match all ya want
-
----
-
-# How to do?
-- Data passed in via attributes
-- Might need to serialize em tho
-- Actions are Custom Events
-- But LiveView doesn't know about Custom Events
-- Guess we'll need a hook afer all... :( :(
-
----
-
-# Ugh that sounds like work
-
----
-
-# LiveElements
-### Magically turn Custom Elements into LiveView functional components
-- Declaratively using `custom_element` macro
-  - Or "magically" with custom elements manifest file
-- Handle custom events with `handle_event` callbacks
-- Serializes complex attributes as JSON
-
----
-
-# Example: [Airports on map](http://localhost:4000/airports)
-
----
-
-## Two custom elements
-- `<lit-google-map>` and `<lit-google-map-marker>`
-- Only `<lit-google-map>` needs to be a Liveview component
-```html
-<div class="map">
-  <.lit_google_map id="the_map" api-key={@api_key} version="3.46">
-    <%= for %{geo_location: %Geo.Point{coordinates: {lng, lat}}, name: name, ident: ident} <- @airports do %>
-      <lit-google-map-marker slot="markers" latitude={lat} longitude={lng}>
-        <p><%= name %> (<%= ident %>)</p>
-      </lit-google-map-marker>
-    <% end %>
-  </.lit_google_map>
-</div>
-```
-
----
-## The view
-```elixir
-  use LiveElements.CustomElementsHelpers
-  custom_element :lit_google_map, events: [:bounds_changed, :tilesloaded]
-
-  @impl true
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, airports: [], api_key: System.get_env("API_KEY"))}
-  end
-
-  @impl true
-  def handle_event("bounds_changed", event_payload, socket), do: load_airports(event_payload, socket)
-
-  @impl true
-  def handle_event("tilesloaded", event_payload, socket), do: load_airports(event_payload, socket)
-
-  defp load_airports(%{"north" => north, "east" => east, "west" => west, "south" => south}, socket) do
-    airports =
-      Airports.list_airports_in_bounds(%{north: north, east: east, west: west, south: south})
-
-    {:noreply, socket |> assign(airports: airports)}
-  end
-
-```
----
-
-# To summarize
-- It's really easy to use Custom Elements in LiveView
-- Let LiveElements do the work for you
-- Use em just like any other functional component
-
----
-
-# Scenario the second
-
----
-
-# Extending the reach of Elixir
-
----
-
-# Two questions
-
----
-
-# What percentage of websites are served by Elixir?
-
----
-
-# What percentage of websites use HTML?
-
----
-
-# What if the only requirement to deploy our Elixir app was an HTML element?
-
----
-
-# Let's take this show on the road..
-- What if we wanted to drop our map on arbitrary wobsites?
-- What if they weren't served by Elixir at all?
-
----
-
-# LiveState
-### a LiveView-like(tm) developer experience for non Elixir hosted app
-- `phx-live-state`: front end npm library
-- `live_state`: hex package
-
----
-
-# Seeing is believing...
-
----
-
-### `<airport-map>`
+## Airport map element
 ```ts
 @customElement('airport-map')
 @liveState({
@@ -292,12 +146,6 @@ export class AirportMapElement extends LitElement {
   @liveStateProperty()
   airports: Array<Airport> = [];
 
-```
-
----
-
-## Rendering airports
-```ts
   render() {
     return html`
       <div class="map">
@@ -311,11 +159,12 @@ export class AirportMapElement extends LitElement {
       </div>    
     `;
   }
+}
 
 ```
----
 
-### `airport_map_channel.ex`
+---
+# Airports channel
 ```elixir
 defmodule LiveElementsLabsWeb.AirportMapChannel do
   use LiveState.Channel, web_module: LiveElementsLabsWeb
@@ -340,55 +189,64 @@ defmodule LiveElementsLabsWeb.AirportMapChannel do
     {:noreply, state |> Map.put(:airports, airports)}
   end
 end
-
 ```
 ---
 
-## Usage
-```html
-<html>
+# Why should we stick with web standards?
+## We can reinvent our own better stuff!
 
-<head>
-  <title>Airport map</title>
-  <script type="module" src="http://localhost:4000/assets/custom_elements.js">
-  </script>
-</head>
+---
 
-<body>
-  <h1>Wut up Elixirconf</h1>
-  <airport-map api-key="XXXXX"></airport-map>
-</body>
+# Sure, maybe but...
+- We are taking on significant risk
+- We have a *lot* more to do
+- We might miss out on new great stuff
 
-</html>
+---
+
+# So LiveState got me thinking...
+- Could I make developing my front end even simpler?
+- What if you could just start from just an HTML file?
+
+---
+
+# Introducing LiveTemplates
+- `<live-template>` connects a client side template to a LiveState channel
+- sends events
+- re-renders on state change
+
+---
+
+# Let's make a CRM!
+
+---
+
+# Excerpts from PeopleChannel
+```elixir
+  @impl true
+  def init(_channel, _params, _socket) do
+    {:ok, %{people: People.list_people(), errors: %{}, editing: false, person: %People.Person{}}}
+  end
+
+  def handle_event("save-person", person, state) do
+    case People.create_person(person) do
+      {:ok, saved_person} ->
+        {:noreply,
+         %{
+           people: People.list_people(),
+           person: saved_person,
+           editing: false
+         }}
+
+      {:error, changeset} ->
+        {:noreply, state |> Map.put(:errors, format_errors(changeset)) |> Map.put(:person, person)}
+    end
+  end
 ```
 
 ---
 
-# [Tada](airport_map.html)
-
----
-
-# Livestate in the wild
-
----
-
-# [LiveRoom](https://liveroom.app/)
-
----
-
-# [PatientReach360](https://patientreach360-dev.fly.dev/example_sites/c80196d7-78b8-4106-98d3-5bff87dd0b2d)
-
----
-
-# [Launch Elements](https://elements.launchscout.com)
-
----
-
-# Here is my radical suggestion in closing...
-
----
-
-# We should use HTML to build web apps
+# Let's start!
 
 ---
 
