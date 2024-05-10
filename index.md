@@ -30,11 +30,6 @@ style: |
   }
 ---
 
-![bg](./slide-welcome.jpg)
-
----
-
-![bg right contain](./matched-edge.png)
 # LiveState: LiveView Re-Imagined
 Chris Nelson
 @superchris
@@ -47,81 +42,90 @@ Chris Nelson
 - Long-time (old) Elixirist
 - Co-Founder of Launch Scout
 - Creator LiveState (and friends)
+- Apprenticeship enthusiast 
 
 ---
 
-# Let's start with the obvious:
+## LiveState started with a question: 
+### How could I use LiveView in a app not served (or rendered) by Elixir?
 
 ---
 
-# Why the heck would you re-imagine LiveView?
+# Why would you even want that?
+- Embedded apps
+  - Apps that live in your customers websites
+- Static site generators
+- Existing JS framework 
+- It's about expanding the reach of Elixir
 
 ---
 
-# I come to praise LiveView, not to bury it
-### LiveView is absolutely excellent, if you are or are willing to become an Elixirist
+# What do I *really* love about LiveView
+- The most important thing is not the template language
+- It's how simple it makes the front end
 
 ---
 
-# But what about everybody else?
-- We have a solution to the most difficult problem in web application development
-- But we're hiding it under a rock
+## LiveView front end code only does two things
+- Renders state
+- Sends events
 
 ---
 
-# And what about us?
-- We can stay happily in Elixir and never touch the nasty javascript
-- But we also miss out on some really excellent innovations going on
-
----
-
-# And there are things worth paying attention to...
-- Custom Elements
-- Import maps
-- Signals
-- Or even the humble `<dialog>`
-
----
-
-# What makes web application development so hard?
-## This?
-![all the mvcs](web2.png)
-
----
-
-## Or this?
-![](event_reducers.png)
-
----
-
-# Why do we really love LiveView?
-- It gives a sensible way to manage state
-- We get to build one application instead of two
+# What if we could use this pattern in more places?
+## Could we keep our state in Elixir and our front-end dead simple?
 
 ---
 
 # LiveState
-### An attempt to have the things we love about LiveView without Elixir rendering our view
-- An elixir library (live_state)
-- A javascript library (phx-live-state)
-- Both are thin abstractions over Phoenix Channels
+- A hex package containing a channel behaviour
+- A client side npm
+- mostly a wrapper around Phoenix Channels
+- sends events and receives state updates
 
 ---
 
-# How it works
-
-- `phx-live-state` sends Custom Events over channel as `lvs:event_name`
-- Receives `state:change` events to update local state
-  - or `state:patch` containing JSON patches
-- state updates trigger re-renders
-  - **This part I get for free**
+# `live_state`
+- `use LiveState.Channel` behaviour in your channel
+- implement callbacks
+  - init/3
+  - handle_event/3
 
 ---
 
-# Example time: An airport map element
-- Custom element we can drop on any page
+# `phx-live-state`
+- javascript (typescript) npm
+- increasing levels of abstraction:
+  - `LiveState` - lower level API
+  - `connectElement()` allows you to "wire up" a Custom Element
+  - `@liveState` TS decorator lets you declaratively annotate a Custom Element class
+
+---
+
+# Example time: An [airport map](airport_map.html) element
+- Custom element we can drop on any HTML page
 - Displays pins for aiport data on a map
-- Fetches when the user pans/zooms
+- Re-fetches when the user pans/zooms
+
+---
+
+## The HTML
+```html
+<html>
+
+<head>
+  <title>Student wobsite</title>
+  <script type="module" src="http://localhost:4001/assets/custom_elements.js">
+  </script>
+</head>
+
+<body>
+  <h1>Wut up Gig City!</h1>
+  <airport-map url="ws://localhost:4001/socket" api-key="AIzaSyDBDmRjILjZvT1tBpos4Y9LvnoU_wFTFe8"></airport-map>
+</body>
+
+</html>
+```
 
 ---
 ## Airport map element
@@ -192,68 +196,78 @@ end
 ```
 ---
 
-# Why should we stick with web standards?
-## We can reinvent our own better stuff!
+# So I created LiveState, looked upon it and it was good.
 
 ---
 
-# Sure, maybe but...
-- We are taking on significant risk
-- We have a *lot* more to do
-- We might miss out on new great stuff
-
----
-
-# So LiveState got me thinking...
+# But...
 - Could I make developing my front end even simpler?
+- Could I use LiveState without even having to create a Custom Element?
 - What if you could just start from just an HTML file?
 
 ---
 
 # Introducing LiveTemplates
 - `<live-template>` connects a client side template to a LiveState channel
+- Uses a client side templating library called [Sprae](https://github.com/dy/sprae)
 - sends events
+  - form events
+  - clicks
+  - more soon :)
 - re-renders on state change
+- optionally shares context
 
 ---
 
-# Let's make a CRM!
+# What would a [CRUD app](silly_crm.html) look like?
+- Created a people context using generator
+- Person
+  - first name
+  - last name
+  - birth date
 
 ---
 
-# Excerpts from PeopleChannel
-```elixir
-  @impl true
-  def init(_channel, _params, _socket) do
-    {:ok, %{people: People.list_people(), errors: %{}, editing: false, person: %People.Person{}}}
-  end
-
-  def handle_event("save-person", person, state) do
-    case People.create_person(person) do
-      {:ok, saved_person} ->
-        {:noreply,
-         %{
-           people: People.list_people(),
-           person: saved_person,
-           editing: false
-         }}
-
-      {:error, changeset} ->
-        {:noreply, state |> Map.put(:errors, format_errors(changeset)) |> Map.put(:person, person)}
-    end
-  end
-```
+# Let's see the code!
+- silly_crm.html
+- people_channel.ex
 
 ---
 
-# Let's start!
+# One more thing
 
 ---
 
-![link to slides](loop-rocket.gif)
-- slides: https://github.com/launchscout/elixirconf2023-beyond-liveview
-- live_elements: https://github.com/launchscout/live_elements
+# Signals: a standard way to do reactivity
+- Values that track access and trigger renders on change
+- Rapidly being adopted across JS frameworks
+- SolidJS, Preact, Angular, etc
+- Current implementations differ
+- TC39 Proposal
+
+---
+
+# LiveSignals
+- bridging a signal to the backend
+- Supports Preact and TC39 so far 
+- Supporting something else would be a very tiny PR :wink:
+
+---
+
+# Let's see a [Preact demo](preact-example.html)
+
+---
+
+# Thanks!
+
+- slides: https://github.com/superchris/gce-2024-livestate
 - live_state elixir library: https://github.com/launchscout/live_state
 - phx-live-state client npm: https://github.com/launchscout/live-state
+- live-templates: https://github.com/launchscout/live-templates
+- live-signals: https://github.com/launchscout/live-signals
+
+---
+
+# Bonus time!
 
 ---
