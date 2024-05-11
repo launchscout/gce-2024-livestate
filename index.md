@@ -30,7 +30,7 @@ style: |
   }
 ---
 
-# LiveState: LiveView Re-Imagined
+# LiveState and Friends
 Chris Nelson
 @superchris
 ![h:200](full-color.png#title-slide-logo)
@@ -46,6 +46,13 @@ Chris Nelson
 
 ---
 
+# What are we talking about?
+- Live State
+- Live Templates
+- Live Signals
+
+---
+
 ## LiveState started with a question: 
 ### How could I use LiveView in a app not served (or rendered) by Elixir?
 
@@ -56,7 +63,7 @@ Chris Nelson
   - Apps that live in your customers websites
 - Static site generators
 - Existing JS framework 
-- It's about expanding the reach of Elixir
+- **It's about expanding the reach of Elixir**
 
 ---
 
@@ -219,7 +226,7 @@ end
 
 ---
 
-# What would a [CRUD app](silly_crm.html) look like?
+# Welcome to [CRUDdy CRM](cruddy_crm.html)
 - Created a people context using generator
 - Person
   - first name
@@ -229,7 +236,7 @@ end
 ---
 
 # Let's see the code!
-- silly_crm.html
+- cruddy_crm.html
 - people_channel.ex
 
 ---
@@ -258,6 +265,12 @@ end
 
 ---
 
+# Built with LiveState
+- [LiveRoom](https://liveroom.app)
+- [Launch Elements](https://elements.launchscout.com)
+
+---
+
 # Thanks!
 
 - slides: https://github.com/superchris/gce-2024-livestate
@@ -265,9 +278,5 @@ end
 - phx-live-state client npm: https://github.com/launchscout/live-state
 - live-templates: https://github.com/launchscout/live-templates
 - live-signals: https://github.com/launchscout/live-signals
-
----
-
-# Bonus time!
 
 ---
