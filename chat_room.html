@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <script type="importmap">
+    {
+      "imports": {
+        "lit": "https://ga.jspm.io/npm:lit@3.2.0/index.js",
+        "phx-live-state": "https://ga.jspm.io/npm:phx-live-state@0.12.1/build/src/index.js"
+      },
+      "scopes": {
+        "https://ga.jspm.io/": {
+          "@lit/reactive-element": "https://ga.jspm.io/npm:@lit/reactive-element@2.0.4/reactive-element.js",
+          "json-joy/esm/json-patch": "https://ga.jspm.io/npm:json-joy@11.43.0/esm/json-patch/index.js",
+          "lit-element/lit-element.js": "https://ga.jspm.io/npm:lit-element@4.1.0/lit-element.js",
+          "lit-html": "https://ga.jspm.io/npm:lit-html@3.2.0/lit-html.js",
+          "lit-html/is-server.js": "https://ga.jspm.io/npm:lit-html@3.2.0/is-server.js",
+          "phoenix": "https://ga.jspm.io/npm:phoenix@1.7.14/priv/static/phoenix.mjs",
+          "process": "https://ga.jspm.io/npm:@jspm/core@2.0.1/nodelibs/browser/process.js",
+          "reflect-metadata": "https://ga.jspm.io/npm:reflect-metadata@0.1.14/Reflect.js",
+          "subscript": "https://ga.jspm.io/npm:subscript@7.6.2/subscript.js",
+          "wc-context": "https://ga.jspm.io/npm:wc-context@1.0.0/core.js"
+        }
+      }
+    }
+    </script>
+     <script type="module">
+      import './chat-room.js'
+    </script>
+  </head>
+  <body>
+    <h1>Wut up Denver Elixir!</h1>
+    <chat-room url="ws://localhost:4000/live_state" room="denver_elixir"></chat-room>
+  </body>
+</html>

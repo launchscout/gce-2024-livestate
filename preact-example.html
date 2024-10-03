@@ -33,51 +33,53 @@
     import htm from 'htm';
     import { createPreactSignal } from './live-signals.js';
 
-    const [peopleSignal, dispatchEvent] = createPreactSignal({
+    const [messageSignal, dispatchEvent] = createPreactSignal({
       url: 'ws://localhost:4000/live_state',
-      topic: 'people:all',
+      topic: 'chat_room:denver_elixir',
       initialValue: [],
-      path: 'people'
+      path: 'messages'
     });
     const html = htm.bind(h);
 
-    function People(props) {
+    function Chat(props) {
       const onSubmit = (event) => {
         event.preventDefault();
-        const person = Object.fromEntries(new FormData(event.target));
-        console.log('person', person);
-        dispatchEvent(new CustomEvent('save-person', { detail: person }));
+        const data = Object.fromEntries(new FormData(event.target));
+        dispatchEvent(new CustomEvent('send_message', { detail: data }));
         event.target.clear();
       };
       return html`
     <table>
       <thead>
         <tr>
-          <th>Last name</th>
-          <th>First name</th>
-          <th>Birth date</th>
+          <th>Author</th>
+          <th>Message</th>
         </tr>
       </thead>
       <tbody>
-        ${peopleSignal.value.map((person) => html`
+        ${messageSignal.value.map((message) => html`
         <tr>
-          <td>${person.last_name}</td>
-          <td>${person.first_name}</td>
-          <td>${person.birth_date}</td>
+          <td>${message.author}</td>
+          <td>${message.message}</td>
           <td></td>
         </tr>`)}
       </tbody>
     </table>
     <form onSubmit=${onSubmit}>
-      <input type="text" name="last_name" placeholder="Last name" />
-      <input type="text" name="first_name" placeholder="First name" />
-      <input type="text" name="birth_date" type="date" />
+      <div>
+        <label>Author</label>
+        <input type="text" name="author" />
+      </div>
+      <div>
+        <label>Message</label>
+        <input type="text" name="message" />
+      </div>
       <button type="submit">Add</button>
     </form>
     `;
     }
 
-    render(html`<${People} />`, document.body);
+    render(html`<${Chat} />`, document.body);
   </script>
 </head>
 

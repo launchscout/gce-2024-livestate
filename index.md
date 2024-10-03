@@ -30,7 +30,7 @@ style: |
   }
 ---
 
-# LiveState and Friends
+# Extending the reach of Elixir with LiveState
 Chris Nelson
 @superchris
 ![h:200](full-color.png#title-slide-logo)
@@ -39,43 +39,37 @@ Chris Nelson
 
 <!-- footer: ![](full-color.png) -->
 # Who am I?
-- Long-time (old) Elixirist
+- Long-time Elixirist
 - Co-Founder of Launch Scout
-- Creator LiveState (and friends)
+- Creator of LiveState (and friends)
 - Apprenticeship enthusiast 
 
 ---
 
-# What are we talking about?
-- Live State
-- Live Templates
-- Live Signals
+# LiveState
+## Letting you *use* Elixir when your app isn't served *by* Elixir
 
 ---
 
-## LiveState started with a question: 
-### How could I use LiveView in a app not served (or rendered) by Elixir?
-
----
-
-# Why would you even want that?
+# Why would you need that?
 - Embedded apps
-  - Apps that live in your customers websites
-- Static site generators
-- Existing JS framework 
+  - Apps that live in your customers websites (Wordpress, Wix, etc)
+- A *much* better DX than custom javascript, iframes, and APIs
 - **It's about expanding the reach of Elixir**
 
 ---
 
-# What do I *really* love about LiveView
+# But first: What do I *really* love about LiveView
 - The most important thing is not the template language
 - It's how simple it makes the front end
 
 ---
 
-## LiveView front end code only does two things
-- Renders state
-- Sends events
+# How does LiveView keep things simple?
+- State lives on the server
+- LiveView code:
+  - Renders state
+  - Computes new state from events
 
 ---
 
@@ -97,6 +91,7 @@ Chris Nelson
 - implement callbacks
   - init/3
   - handle_event/3
+  - handle_message/3
 
 ---
 
@@ -109,108 +104,145 @@ Chris Nelson
 
 ---
 
-# Example time: An [airport map](airport_map.html) element
-- Custom element we can drop on any HTML page
-- Displays pins for aiport data on a map
-- Re-fetches when the user pans/zooms
+# More about `phx-live-state`
+- [Custom Events](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent) are pushed to the channel
+- state changes are send as JSON patch
+  - with a version to prevent out of order messaging issues
+- elements can share a LiveState instance via the Context Protocol
+  - `provide` and `context` attributes of config
+  
+---
+
+# Example time: `<chat-room>`
+- The classic Phoenix example
+- now packages as a custom element (aka Web Component)
 
 ---
 
-## The HTML
+# An aside on Custom Elements
+- Great way to add your app to your clients websites
+- Worpress, Wix, Squarespace, Drupal
+- Turns out they all support HTML!
+- And you can style it with good ole CSS!
+
+---
+
+# The chat channel
+```elixir
+defmodule ChatRoomWeb.ChatRoomChannel do
+  @moduledoc false
+
+  use LiveState.Channel, web_module: ChatRoomWeb
+  alias Phoenix.PubSub
+
+  @impl true
+  def init("chat_room:" <> room, _params, _socket) do
+    PubSub.subscribe(ChatRoom.PubSub, "chat_messages:#{room}")
+    {:ok, %{messages: [], room: room}}
+  end
+
+  @impl true
+  def handle_event("send_message", message, %{room: room} = state) do
+    PubSub.broadcast!(ChatRoom.PubSub, "chat_messages:#{room}", message)
+    {:noreply, state}
+  end
+
+  def handle_message(message, %{messages: messages} = state) do
+    {:noreply, state |> Map.put(:messages, [message | messages])}
+  end
+
+end
+```
+---
+# `<chat-room>`
+```js
+export class ChatRoomElement extends LitElement {
+
+  static properties = {
+    url: {},
+    room: {},
+    messages: {
+      type: Array,
+      attribute: false
+    }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    connectElement(this, {
+      url: this.getAttribute('url'),
+      topic: `chat_room:${this.getAttribute('room')}`,
+      properties: ['messages'],
+      events: {
+        send: ['send_message']
+      }
+    })
+  }
+```
+
+---
+# `<chat-room>` cont.
+```js
+  get messageElement()  {
+    return this.shadowRoot.querySelector('textarea[name="message"]');
+  }
+
+  render() {
+    return html`
+    <ul part="messsage-list">
+      ${this.messages?.map(({ author, message }) => html`<li>${author}: ${message}`)}
+    </ul>
+    <form @submit=${this.sendMessage}>
+      <div>
+        <label>Author</label>
+        <input name="author" />
+      </div>
+      <div>
+        <label>Message</label>
+        <textarea name="message"></textarea>
+      </div>
+      <button>Send!</button>
+    </form>
+    `;
+  }
+
+  sendMessage(e) {
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    e.preventDefault();
+    this.messageElement.value = '';
+    this.dispatchEvent(new CustomEvent('send_message', {detail: data}));
+  }
+}
+
+window.customElements.define('chat-room', ChatRoomElement);
+```
+
+---
+
+# [`chat-room.html`](chat_room.html)
 ```html
 <html>
-
-<head>
-  <title>Student wobsite</title>
-  <script type="module" src="http://localhost:4001/assets/custom_elements.js">
-  </script>
-</head>
-
-<body>
-  <h1>Wut up Gig City!</h1>
-  <airport-map url="ws://localhost:4001/socket" api-key="AIzaSyDBDmRjILjZvT1tBpos4Y9LvnoU_wFTFe8"></airport-map>
-</body>
-
+  <head>
+    <script type="importmap">
+      ...
+    </script>
+     <script type="module">
+      import './chat-room.js'
+    </script>
+  </head>
+  <body>
+    <h1>Wut up Denver Elixir!</h1>
+    <chat-room url="ws://localhost:4000/live_state" room="denver_elixir"></chat-room>
+  </body>
 </html>
 ```
 
 ---
-## Airport map element
-```ts
-@customElement('airport-map')
-@liveState({
-  topic: 'airport_map',
-  events: {
-    send: ['tilesloaded', 'bounds_changed']
-  }
-})
-export class AirportMapElement extends LitElement {
-  
-  @property({attribute: 'api-key'})
-  apiKey: string = '';
 
-  @liveStateConfig('url')
-  @property()
-  url: string = '';
-
-  @state()
-  @liveStateProperty()
-  airports: Array<Airport> = [];
-
-  render() {
-    return html`
-      <div class="map">
-        <lit-google-map api-key=${this.apiKey} version="3.46">
-          ${this.airports?.map(({name, identifier, latitude, longitude}) => html`
-            <lit-google-map-marker slot="markers" latitude=${latitude} longitude=${longitude}>
-              <p>${name} (${identifier})</p>
-            </lit-google-map-marker>        
-          `)}
-        </lit-google-map>
-      </div>    
-    `;
-  }
-}
-
-```
-
----
-# Airports channel
-```elixir
-defmodule LiveElementsLabsWeb.AirportMapChannel do
-  use LiveState.Channel, web_module: LiveElementsLabsWeb
-
-  alias LiveElementsLabs.Airports
-
-  @impl true
-  def init(_params, _session, _socket) do
-    {:ok, %{api_key: System.get_env("API_KEY")} }
-  end
-
-  @impl true
-  def handle_event("bounds_changed", event_payload, state), do: load_airports(event_payload, state)
-
-  @impl true
-  def handle_event("tilesloaded", event_payload, state), do: load_airports(event_payload, state)
-
-  defp load_airports(%{"north" => north, "east" => east, "west" => west, "south" => south}, state) do
-    airports =
-      Airports.list_airports_in_bounds(%{north: north, east: east, west: west, south: south})
-
-    {:noreply, state |> Map.put(:airports, airports)}
-  end
-end
-```
----
-
-# So I created LiveState, looked upon it and it was good.
-
----
-
-# But...
-- Could I make developing my front end even simpler?
-- Could I use LiveState without even having to create a Custom Element?
-- What if you could just start from just an HTML file?
+# So that's cool, but...
+- What if I don't need/want to make a custom element?
+- What if I could just connect the html on my web page to a LiveState channel?
 
 ---
 
@@ -226,22 +258,16 @@ end
 
 ---
 
-# Welcome to [CRUDdy CRM](cruddy_crm.html)
-- Created a people context using generator
-- Person
-  - first name
-  - last name
-  - birth date
+# Kinda like htmx meets Elixir
 
 ---
 
-# Let's see the code!
-- cruddy_crm.html
-- people_channel.ex
+# Chat with [live-templates](live_template.html)
+### In which I live code...
 
 ---
 
-# One more thing
+# Ok but what if like Preact/Solid/Svelte/XXX..
 
 ---
 
@@ -265,9 +291,15 @@ end
 
 ---
 
+# And now for something completely different...
+## Let's turn our `<chat-room>` into a WordPress plugin
+
+---
+
 # Built with LiveState
 - [LiveRoom](https://liveroom.app)
 - [Launch Elements](https://elements.launchscout.com)
+- [PatientReach 360](https://patientreach360.com)
 
 ---
 
