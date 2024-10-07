@@ -310,5 +310,6 @@ window.customElements.define('chat-room', ChatRoomElement);
 - phx-live-state client npm: https://github.com/launchscout/live-state
 - live-templates: https://github.com/launchscout/live-templates
 - live-signals: https://github.com/launchscout/live-signals
+- [Wordpress blog post](https://launchscout.com/blog/elixir-wordpress-plugin)
 
 ---
